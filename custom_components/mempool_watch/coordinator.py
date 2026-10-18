@@ -196,7 +196,7 @@ class MempoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "hashrate",
                 "reward_stats",
                 "prices",
-                "mempool_blocks", 
+                "mempool_blocks",
             ):
                 if key not in data:
                     data[key] = self.data.get(key)
