@@ -33,10 +33,10 @@ def _safe(data: dict[str, Any], *keys: str, default: Any = None) -> Any:
     return cur
 
 
-def _next_block(data: dict[str, Any]) -> dict[str, Any]:
-    """First projected mempool block or empty."""
-    blocks = data.get("mempool_blocks") or []
-    return blocks[0] if blocks else {}
+def _next_block(data: dict[str, Any]) -> dict[str, Any] | None:
+    """First projected mempool block or None."""
+    blocks = data.get("mempool_blocks")
+    return blocks[0] if blocks else None
 
 
 SENSOR_DATA_MAP: dict[str, Callable[[dict[str, Any]], Any]] = {
@@ -112,10 +112,10 @@ SENSOR_DATA_MAP: dict[str, Callable[[dict[str, Any]], Any]] = {
         8,
     ),
     "next_block_median_fee": lambda data: round(
-        float(_next_block(data).get("medianFee") or 0), 1
+        float(_next_block(data)["medianFee"]), 1
     ),
-    "next_block_n_tx": lambda data: _next_block(data).get("nTx"),
-    "projected_blocks": lambda data: len(data.get("mempool_blocks") or []),
+    "next_block_n_tx": lambda data: _next_block(data)["nTx"],
+    "projected_blocks": lambda data: len(data["mempool_blocks"]),
     "btc_price": lambda data: data["price"].get("USD"),
 }
 
