@@ -61,7 +61,7 @@ SENSOR_DATA_MAP: dict[str, Callable[[dict[str, Any]], Any]] = {
         "remainingBlocks"
     ],
     "remaining_time": lambda data: round(
-        int(data["difficulty_adjustment"].get("remainingTime", 0)) / 3600, 1
+        int(data["difficulty_adjustment"].get("remainingTime", 0)) / 3_600_000, 1
     ),
     "previous_retarget": lambda data: data["difficulty_adjustment"].get(
         "previousRetarget"
