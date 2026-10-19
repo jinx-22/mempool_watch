@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -17,9 +18,12 @@ from .const import (
     CONF_VERIFY_SSL,
     DEFAULT_UPDATE_INTERVAL,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
 from .coordinator import MempoolDataUpdateCoordinator
 from .data import MempoolConfigEntry, MempoolData
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

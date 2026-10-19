@@ -161,6 +161,7 @@ class MempoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "hashrate": self.client.async_get_hashrate,
             "reward_stats": self.client.async_get_reward_stats,
             "prices": self.client.async_get_prices,
+            "mempool_blocks": self.client.async_get_mempool_blocks,
         }
 
         results = await asyncio.gather(
@@ -195,6 +196,7 @@ class MempoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "hashrate",
                 "reward_stats",
                 "prices",
+                "mempool_blocks",
             ):
                 if key not in data:
                     data[key] = self.data.get(key)
@@ -268,6 +270,7 @@ class MempoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "hashrate": data.get("hashrate"),
             "reward_stats": data.get("reward_stats"),
             "latest_block": latest_block,
+            "mempool_blocks": data.get("mempool_blocks"),
             "price": price,
             "address_data": address_data,
         }

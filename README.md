@@ -16,7 +16,9 @@ Home Assistant Integration
 
 🇬🇧 **English** · 🇩🇪 [**Deutsch**](README_DE.md)
 
-**Current version: v0.5.9.3**
+**Current version: v0.5.9.4**
+
+[Changelog](https://github.com/jinx-22/mempool_watch/blob/main/CHANGELOG.md)
 
 ---
 

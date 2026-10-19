@@ -3,7 +3,13 @@
 
   const CARD_TYPE = "btc-address-card";
   const EDITOR_TYPE = `${CARD_TYPE}-editor`;
-  const VERSION = "0.9.9.g";
+  const VERSION = "1.1.0.1";
+
+  // Schon geladen (z. B. als Lovelace-Ressource UND per add_extra_js_url)?
+  // Dann nichts doppelt registrieren (Picker-Eintrag, Konsolenbanner).
+  if (customElements.get(CARD_TYPE)) {
+    return;
+  }
 
   const isAddressEntity = (state) =>
     !!(
@@ -39,15 +45,11 @@
     return `${address.slice(0, 10)}…${address.slice(-8)}`;
   };
 
-  const t = (hass, de, en) => {
-    const language = (
-      hass?.locale?.language ||
-      hass?.language ||
-      "en"
-    ).toLowerCase();
+  const getLanguage = (hass) =>
+    (hass?.locale?.language || hass?.language || "en").toLowerCase();
 
-    return language.startsWith("de") ? de : en;
-  };
+  const t = (hass, de, en) =>
+    getLanguage(hass).startsWith("de") ? de : en;
 
   class BtcAddressCard extends HTMLElement {
     static getConfigElement() {
@@ -56,11 +58,8 @@
 
     static getStubConfig(hass) {
       const entity =
-        Object.keys(hass?.states || {}).find(
-          (entityId) =>
-            isAddressEntity(
-              hass.states[entityId]
-            )
+        Object.keys(hass?.states || {}).find((entityId) =>
+          isAddressEntity(hass.states[entityId])
         ) || "";
 
       return {
@@ -83,8 +82,19 @@
     }
 
     set hass(hass) {
+      const entity = this._config?.entity;
+      const oldState = this._hass?.states?.[entity];
+      const newState = hass?.states?.[entity];
+      const languageChanged =
+        getLanguage(this._hass) !== getLanguage(hass);
+
       this._hass = hass;
-      this._render();
+
+      // Nur neu rendern, wenn sich etwas Relevantes geändert hat.
+      // Verhindert Neuaufbau bei jeder Statusänderung beliebiger Entitäten.
+      if (!this._root || oldState !== newState || languageChanged) {
+        this._render();
+      }
     }
 
     getCardSize() {
@@ -123,21 +133,18 @@
         entity ||
         t(hass, "BTC-Adresse", "BTC address");
 
-      if (
-        hass?.formatEntityName &&
-        state &&
-        this._config.name
-      ) {
+      if (hass?.formatEntityName && state && this._config.name) {
         try {
-          name = hass.formatEntityName(
-            state,
-            this._config.name
-          );
+          name = hass.formatEntityName(state, this._config.name);
         } catch {
-          name =
-            attrs.friendly_name ||
-            entity;
+          name = attrs.friendly_name || entity;
         }
+      }
+
+      // Der entity_name-Selector kann ein Objekt liefern.
+      // Sicherstellen, dass immer ein Text angezeigt wird.
+      if (typeof name !== "string") {
+        name = attrs.friendly_name || entity || "";
       }
 
       const confirmed = state?.state ?? null;
@@ -150,27 +157,18 @@
       const changeNum = Number(pendingChange);
 
       const changeClass =
-        changeNum > 0
-          ? "pos"
-          : changeNum < 0
-            ? "neg"
-            : "";
+        changeNum > 0 ? "pos" : changeNum < 0 ? "neg" : "";
 
       const unavailable =
         !state ||
         confirmed === "unavailable" ||
         confirmed === "unknown";
 
-      const configuredFontSize =
-        Number(this._config.font_size);
+      const configuredFontSize = Number(this._config.font_size);
 
-      const fontSize =
-        Number.isFinite(configuredFontSize)
-          ? Math.min(
-              150,
-              Math.max(70, configuredFontSize)
-            )
-          : 100;
+      const fontSize = Number.isFinite(configuredFontSize)
+        ? Math.min(150, Math.max(70, configuredFontSize))
+        : 100;
 
       const fontScale = fontSize / 100;
 
@@ -230,8 +228,7 @@
 
           .addr {
             margin-top: 2px;
-            font-family:
-              var(--code-font-family, monospace);
+            font-family: var(--code-font-family, monospace);
             font-size: 0.75em;
             color: var(--secondary-text-color);
             word-break: break-all;
@@ -247,12 +244,11 @@
           }
 
           .badge.hot {
-            background:
-              color-mix(
-                in srgb,
-                var(--warning-color) 22%,
-                transparent
-              );
+            background: color-mix(
+              in srgb,
+              var(--warning-color) 22%,
+              transparent
+            );
             color: var(--warning-color);
           }
 
@@ -329,36 +325,19 @@
               `
               : `
                 <div class="wrap">
-
                   <div class="head">
-
                     <div>
-
-                      <div class="title">
-                        ${this._esc(name)}
+                      <div class="title">${this._esc(name)}</div>
+                      <div class="addr" title="${this._esc(address)}">
+                        ${this._esc(shortAddr(address))}
                       </div>
-
-                      <div
-                        class="addr"
-                        title="${this._esc(address)}"
-                      >
-                        ${this._esc(
-                          shortAddr(address)
-                        )}
-                      </div>
-
                     </div>
 
-                    <div
-                      class="badge ${
-                        Number(unconfirmed) > 0
-                          ? "hot"
-                          : ""
-                      }"
-                    >
+                    <div class="badge ${
+                      Number(unconfirmed) > 0 ? "hot" : ""
+                    }">
                       ${Number(unconfirmed) || 0} TX
                     </div>
-
                   </div>
 
                   <div class="balance">
@@ -367,56 +346,32 @@
                   </div>
 
                   <div class="grid">
-
                     <div class="item">
                       <div class="lbl">
-                        ${t(
-                          hass,
-                          "Eingang unbestätigt",
-                          "Pending in"
-                        )}
+                        ${t(hass, "Eingang unbestätigt", "Pending in")}
                       </div>
-
-                      <div
-                        class="val ${
-                          Number(pendingIn) > 0
-                            ? "pos"
-                            : ""
-                        }"
-                      >
+                      <div class="val ${
+                        Number(pendingIn) > 0 ? "pos" : ""
+                      }">
                         ${fmtBtc(pendingIn)}
                       </div>
                     </div>
 
                     <div class="item">
                       <div class="lbl">
-                        ${t(
-                          hass,
-                          "Ausgang unbestätigt",
-                          "Pending out"
-                        )}
+                        ${t(hass, "Ausgang unbestätigt", "Pending out")}
                       </div>
-
-                      <div
-                        class="val ${
-                          Number(pendingOut) > 0
-                            ? "neg"
-                            : ""
-                        }"
-                      >
+                      <div class="val ${
+                        Number(pendingOut) > 0 ? "neg" : ""
+                      }">
                         ${fmtBtc(pendingOut)}
                       </div>
                     </div>
 
                     <div class="item">
                       <div class="lbl">
-                        ${t(
-                          hass,
-                          "Netto pending",
-                          "Net pending"
-                        )}
+                        ${t(hass, "Netto pending", "Net pending")}
                       </div>
-
                       <div class="val ${changeClass}">
                         ${fmtSigned(pendingChange)}
                       </div>
@@ -424,31 +379,20 @@
 
                     <div class="item">
                       <div class="lbl">
-                        ${t(
-                          hass,
-                          "Bestätigt",
-                          "Confirmed"
-                        )}
+                        ${t(hass, "Bestätigt", "Confirmed")}
                       </div>
-
                       <div class="val">
-                        ${fmtBtc(
-                          attrs.confirmed_balance ??
-                          confirmed
-                        )}
+                        ${fmtBtc(attrs.confirmed_balance ?? confirmed)}
                       </div>
                     </div>
-
                   </div>
-
                 </div>
               `
           }
         </ha-card>
       `;
 
-      const card =
-        this._root.querySelector("ha-card");
+      const card = this._root.querySelector("ha-card");
 
       if (card) {
         card.onclick = () => {
@@ -483,7 +427,6 @@
       this._container = null;
       this._picker = null;
       this._name = null;
-      this._theme = null;
       this._font = null;
     }
 
@@ -509,104 +452,41 @@
       if (!this._container) {
         this.innerHTML = "";
 
-        this._container =
-          document.createElement("div");
-
+        this._container = document.createElement("div");
         this._container.style.display = "grid";
         this._container.style.gap = "16px";
 
-        /*
-         * BTC ENTITY PICKER
-         *
-         * HA-Komponente.
-         * Nur Sensoren mit unconfirmed_count.
-         */
-
-        this._picker =
-          document.createElement(
-            "ha-entity-picker"
-          );
-
+        // BTC-Entity-Picker: nur Sensoren mit unconfirmed_count
+        this._picker = document.createElement("ha-entity-picker");
         this._picker.hass = this._hass;
         this._picker.allowCustomEntity = false;
         this._picker.includeDomains = ["sensor"];
+        this._picker.entityFilter = (state) => isAddressEntity(state);
 
-        this._picker.entityFilter = (state) =>
-          isAddressEntity(state);
+        this._picker.addEventListener("value-changed", (event) => {
+          event.stopPropagation();
 
-        this._picker.addEventListener(
-          "value-changed",
-          (event) => {
-            event.stopPropagation();
+          this._update({
+            entity: event.detail?.value || "",
+          });
+        });
 
-            this._update({
-              entity:
-                event.detail?.value || "",
-            });
-          }
-        );
-
-        /*
-         * NAME
-         */
-
-        this._name =
-          document.createElement(
-            "ha-selector"
-          );
-
+        // Name
+        this._name = document.createElement("ha-selector");
         this._name.selector = {
           entity_name: {},
         };
 
-        this._name.addEventListener(
-          "value-changed",
-          (event) => {
-            event.stopPropagation();
+        this._name.addEventListener("value-changed", (event) => {
+          event.stopPropagation();
 
-            this._update({
-              name:
-                event.detail?.value ||
-                undefined,
-            });
-          }
-        );
+          this._update({
+            name: event.detail?.value || undefined,
+          });
+        });
 
-        /*
-         * DESIGN / THEME
-         */
-
-        this._theme =
-          document.createElement(
-            "ha-selector"
-          );
-
-        this._theme.selector = {
-          theme: {},
-        };
-
-        this._theme.addEventListener(
-          "value-changed",
-          (event) => {
-            event.stopPropagation();
-
-            this._update({
-              theme:
-                event.detail?.value ||
-                undefined,
-            });
-          }
-        );
-
-        /*
-         * SCHRIFTGRÖSSE
-         */
-
-        this._font =
-          document.createElement(
-            "ha-selector"
-          );
-
+        // Schriftgröße
+        this._font = document.createElement("ha-selector");
         this._font.selector = {
           number: {
             min: 70,
@@ -617,102 +497,37 @@
           },
         };
 
-        this._font.addEventListener(
-          "value-changed",
-          (event) => {
-            event.stopPropagation();
+        this._font.addEventListener("value-changed", (event) => {
+          event.stopPropagation();
 
-            const value =
-              Number(
-                event.detail?.value
-              );
+          const value = Number(event.detail?.value);
 
-            if (!Number.isFinite(value)) {
-              return;
-            }
-
-            this._update({
-              font_size: Math.min(
-                150,
-                Math.max(70, value)
-              ),
-            });
+          if (!Number.isFinite(value)) {
+            return;
           }
-        );
 
-        this._container.append(
-          this._picker,
-          this._name,
-          this._theme,
-          this._font
-        );
+          this._update({
+            font_size: Math.min(150, Math.max(70, value)),
+          });
+        });
 
-        this.appendChild(
-          this._container
-        );
+        this._container.append(this._picker, this._name, this._font);
+        this.appendChild(this._container);
       }
 
-      this._picker.hass =
-        this._hass;
+      this._picker.hass = this._hass;
+      this._picker.value = this._config.entity || "";
+      this._picker.label = t(this._hass, "BTC-Adresse", "BTC address");
 
-      this._picker.value =
-        this._config.entity || "";
+      this._name.hass = this._hass;
+      this._name.value = this._config.name || "";
+      this._name.label = t(this._hass, "Name", "Name");
 
-      this._picker.label =
-        t(
-          this._hass,
-          "BTC-Adresse",
-          "BTC address"
-        );
-
-      this._name.hass =
-        this._hass;
-
-      this._name.value =
-        this._config.name || "";
-
-      this._name.label =
-        t(
-          this._hass,
-          "Name",
-          "Name"
-        );
-
-      this._theme.hass =
-        this._hass;
-
-      this._theme.value =
-        this._config.theme || "";
-
-      this._theme.label =
-        t(
-          this._hass,
-          "Design",
-          "Theme"
-        );
-
-      this._font.hass =
-        this._hass;
-
-      this._font.value =
-        Number.isFinite(
-          Number(this._config.font_size)
-        )
-          ? Math.min(
-              150,
-              Math.max(
-                70,
-                Number(this._config.font_size)
-              )
-            )
-          : 100;
-
-      this._font.label =
-        t(
-          this._hass,
-          "Schriftgröße",
-          "Font size"
-        );
+      this._font.hass = this._hass;
+      this._font.value = Number.isFinite(Number(this._config.font_size))
+        ? Math.min(150, Math.max(70, Number(this._config.font_size)))
+        : 100;
+      this._font.label = t(this._hass, "Schriftgröße", "Font size");
     }
 
     _update(changes) {
@@ -725,51 +540,39 @@
         delete this._config.name;
       }
 
-      if (!this._config.theme) {
-        delete this._config.theme;
-      }
+      // Altlast: früher gab es eine (wirkungslose) Theme-Auswahl
+      delete this._config.theme;
 
       this.dispatchEvent(
-        new CustomEvent(
-          "config-changed",
-          {
-            bubbles: true,
-            composed: true,
-            detail: {
-              config: this._config,
-            },
-          }
-        )
+        new CustomEvent("config-changed", {
+          bubbles: true,
+          composed: true,
+          detail: {
+            config: this._config,
+          },
+        })
       );
     }
   }
 
-  if (!customElements.get(CARD_TYPE)) {
-    customElements.define(
-      CARD_TYPE,
-      BtcAddressCard
-    );
-  }
+  customElements.define(CARD_TYPE, BtcAddressCard);
 
   if (!customElements.get(EDITOR_TYPE)) {
-    customElements.define(
-      EDITOR_TYPE,
-      BtcAddressCardEditor
-    );
+    customElements.define(EDITOR_TYPE, BtcAddressCardEditor);
   }
 
-  window.customCards =
-    window.customCards || [];
+  window.customCards = window.customCards || [];
 
-  window.customCards.push({
-    type: CARD_TYPE,
-    name: "BTC Address Card",
-    preview: true,
-    description:
-      "Bestätigter Saldo und unbestätigte Ein-/Ausgänge (Mempool Watch)",
-    documentationURL:
-      "https://github.com/jinx-22/btc-address-card",
-  });
+  if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
+    window.customCards.push({
+      type: CARD_TYPE,
+      name: "BTC Address Card",
+      preview: true,
+      description:
+        "Bestätigter Saldo und unbestätigte Ein-/Ausgänge (Mempool Watch)",
+      documentationURL: "https://github.com/jinx-22/btc-address-card",
+    });
+  }
 
   console.info(
     `%c BTC Address Card %c v${VERSION} `,
