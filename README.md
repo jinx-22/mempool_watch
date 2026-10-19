@@ -18,6 +18,8 @@ Home Assistant Integration
 
 **Current version: v0.5.9.4**
 
+[Changelog](https://github.com/jinx-22/mempool_watch/blob/main/CHANGELOG.md)
+
 ---
 
 ## 📖 About Mempool Watch
