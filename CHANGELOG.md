@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [0.5.9.5] - 2026-10-19
+## [0.5.9.4] - 2026-10-19
 
 ### Fixed
 
@@ -33,5 +33,5 @@ All notable changes to this project are documented in this file.
 
 ## Earlier versions
 
-Changes before 0.5.9.5 are not listed here. See the
+Changes before 0.5.9.4 are not listed here. See the
 [GitHub releases](https://github.com/jinx-22/mempool_watch/releases).
