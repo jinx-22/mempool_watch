@@ -3,7 +3,7 @@
 
   const CARD_TYPE = "btc-address-card";
   const EDITOR_TYPE = `${CARD_TYPE}-editor`;
-  const VERSION = "0.9.9.h";
+  const VERSION = "1.1.0.1";
 
   // Schon geladen (z. B. als Lovelace-Ressource UND per add_extra_js_url)?
   // Dann nichts doppelt registrieren (Picker-Eintrag, Konsolenbanner).
