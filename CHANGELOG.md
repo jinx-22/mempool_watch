@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.5.9.5] - 2026-10-22
+
+### Fixed
+
+- **Setup failure with YAML dashboards:** The BTC Address Card was registered
+  by creating a Lovelace resource, which does not exist in YAML mode and made
+  the whole integration fail to set up. The card is now loaded with
+  `add_extra_js_url`, which works in every dashboard mode. A resource created
+  by an earlier version is harmless and can be removed manually.
+- **Card not found by dashboards:** The card now registers itself once the
+  Home Assistant frontend is ready. Loaded earlier via `add_extra_js_url`,
+  dashboards and the card picker could report "Custom element doesn't exist".
+- The `documentationURL` of the BTC Address Card now points to this repository.
+
+### Removed
+
+- Stray empty file `custom_components/file`.
+
 ## [0.5.9.4] - 2026-10-19
 
 ### Fixed
