@@ -3,13 +3,16 @@
 
   const CARD_TYPE = "btc-address-card";
   const EDITOR_TYPE = `${CARD_TYPE}-editor`;
-  const VERSION = "1.1.0.1";
+  const VERSION = "1.1.0.3";
 
   // Schon geladen (z. B. als Lovelace-Ressource UND per add_extra_js_url)?
   // Dann nichts doppelt registrieren (Picker-Eintrag, Konsolenbanner).
-  if (customElements.get(CARD_TYPE)) {
+  // Already loaded (or loading)? Do not register twice, e.g. when the script
+  // is included more than once.
+  if (customElements.get(CARD_TYPE) || window.__btcAddressCardLoading) {
     return;
   }
+  window.__btcAddressCardLoading = true;
 
   const isAddressEntity = (state) =>
     !!(
@@ -555,28 +558,39 @@
     }
   }
 
-  customElements.define(CARD_TYPE, BtcAddressCard);
+  const register = () => {
+    customElements.define(CARD_TYPE, BtcAddressCard);
 
-  if (!customElements.get(EDITOR_TYPE)) {
-    customElements.define(EDITOR_TYPE, BtcAddressCardEditor);
-  }
+    if (!customElements.get(EDITOR_TYPE)) {
+      customElements.define(EDITOR_TYPE, BtcAddressCardEditor);
+    }
 
-  window.customCards = window.customCards || [];
+    window.customCards = window.customCards || [];
 
-  if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
-    window.customCards.push({
-      type: CARD_TYPE,
-      name: "BTC Address Card",
-      preview: true,
-      description:
-        "Bestätigter Saldo und unbestätigte Ein-/Ausgänge (Mempool Watch)",
-      documentationURL: "https://github.com/jinx-22/btc-address-card",
-    });
-  }
+    if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
+      window.customCards.push({
+        type: CARD_TYPE,
+        name: "BTC Address Card",
+        preview: true,
+        description:
+          "Bestätigter Saldo und unbestätigte Ein-/Ausgänge (Mempool Watch)",
+        documentationURL: "https://github.com/jinx-22/mempool_watch",
+      });
+    }
 
-  console.info(
-    `%c BTC Address Card %c v${VERSION} `,
-    "color:white;background:#f7931a;font-weight:bold;",
-    "color:#f7931a;background:white;font-weight:bold;"
-  );
+    console.info(
+      `%c BTC Address Card %c v${VERSION} `,
+      "color:white;background:#f7931a;font-weight:bold;",
+      "color:#f7931a;background:white;font-weight:bold;"
+    );
+  };
+
+  // The script is loaded early via add_extra_js_url. Register the elements
+  // only once the Home Assistant frontend is ready (ha-card defined),
+  // otherwise dashboards and the card picker do not find the card.
+  // Fallback: register after 10 seconds at the latest.
+  Promise.race([
+    customElements.whenDefined("ha-card"),
+    new Promise((resolve) => setTimeout(resolve, 10000)),
+  ]).then(register);
 })();

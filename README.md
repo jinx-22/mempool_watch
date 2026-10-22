@@ -16,7 +16,7 @@ Home Assistant Integration
 
 🇬🇧 **English** · 🇩🇪 [**Deutsch**](README_DE.md)
 
-**Current version: v0.5.9.4**
+**Current version: v0.5.9.5**
 
 [Changelog](https://github.com/jinx-22/mempool_watch/blob/main/CHANGELOG.md)
 
@@ -175,20 +175,24 @@ Please provide the following information:
 
 # 🧡 Support & Donations
 
-## Lightning
-
-<p align="center">
-⚡ <b>Address:</b><br><br>
-<code>usefulplay52@walletofsatoshi.com</code><br><br>
-<img width="280" alt="Wallet of Satoshi" src="https://github.com/user-attachments/assets/65cc18d9-05d1-4a00-8ccc-9922fdb54baf" />
-</p>
-
-## Bitcoin
-
 <div align="center">
-<img src="https://github.com/user-attachments/assets/f74cad36-8c05-4a33-89cd-b998075af33b" /><br><br>
-<code>bc1qkz7mtp23cmshxnru96lzgeayu0urlysvqk5vry</code><br><br>
-<img width="220" alt="Bitcoin Donations" src="https://github.com/user-attachments/assets/196f68e4-b0e8-4f27-bded-8c4fe13b9d45" />
+
+### <a id="lightning"></a>Lightning
+
+<img width="32" alt="Lightning" src="https://github.com/user-attachments/assets/0bff59d2-7986-46cf-9d39-17fe0dbb128a" />
+
+`usefulplay52@walletofsatoshi.com`
+
+<img height="300" alt="Lightning - Wallet of Satoshi" src="https://github.com/user-attachments/assets/65cc18d9-05d1-4a00-8ccc-9922fdb54baf" />
+
+### <a id="bitcoin"></a>Bitcoin
+
+<img width="32" alt="Bitcoin" src="https://github.com/user-attachments/assets/f74cad36-8c05-4a33-89cd-b998075af33b" />
+
+`bc1qkz7mtp23cmshxnru96lzgeayu0urlysvqk5vry`
+
+<img height="300" alt="Bitcoin donation" src="https://github.com/user-attachments/assets/196f68e4-b0e8-4f27-bded-8c4fe13b9d45" />
+
 </div>
 
 Thank you for your support — even a free ⭐ helps others discover the project:

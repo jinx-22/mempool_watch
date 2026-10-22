@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,16 +33,18 @@ CARD_FILENAME = "btc-address-card.js"
 CARD_URL = f"/mempool_watch/{CARD_FILENAME}"
 
 
-async def _async_register_card_resource(
+async def _async_register_card(
     hass: HomeAssistant,
 ) -> None:
-    """Register the BTC Address Card as a Lovelace resource."""
+    """Serve the BTC Address Card and load it in the frontend.
+
+    ``add_extra_js_url`` works in every dashboard mode (storage and YAML),
+    so no Lovelace resource has to be created or maintained.
+    """
     card_path = Path(__file__).parent / "frontend" / CARD_FILENAME
 
     if not card_path.is_file():
         return
-
-    from homeassistant.components.http import StaticPathConfig
 
     await hass.http.async_register_static_paths(
         [
@@ -52,28 +56,7 @@ async def _async_register_card_resource(
         ]
     )
 
-    lovelace = hass.data.get("lovelace")
-
-    if lovelace is None:
-        return
-
-    resources = lovelace.resources
-
-    if resources is None:
-        return
-
-    await resources.async_get_info()
-
-    for resource in resources.async_items():
-        if resource.get("url", "").split("?")[0] == CARD_URL:
-            return
-
-    await resources.async_create_item(
-        {
-            "res_type": "module",
-            "url": CARD_URL,
-        }
-    )
+    add_extra_js_url(hass, CARD_URL)
 
 
 async def async_setup(
@@ -81,7 +64,7 @@ async def async_setup(
     config: dict,
 ) -> bool:
     """Set up Mempool Watch."""
-    await _async_register_card_resource(hass)
+    await _async_register_card(hass)
     return True
 
 
