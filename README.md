@@ -43,11 +43,7 @@ Home Assistant Integration
 ## Easy Installation → [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jinx-22&repository=mempool_watch&category=integration)
 
 ## HACS
-
-1. **HACS** → **Integrations** → **Custom repositories**
-2. Add `https://github.com/jinx-22/mempool_watch` (Category: **Integration**)
-3. Install **Mempool Watch** → Restart Home Assistant
-4. **Settings → Devices & services → Add Integration → Mempool Watch**
+search mempool watch
 
 
 ## Manual
